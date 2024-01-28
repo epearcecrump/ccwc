@@ -51,13 +51,11 @@ void countAll(std::istream& in, long* countl, long* countw, long* countc){
     }
 }
 
-
-
-
-int main (int argc, char** argv){
+Parser parseInput(int argc, char** argv){
     Parser parse = {false, false}; //argc = 1 case
     if (argc > 3){
-         std::cerr << "Not valid input." << std::endl;
+         std::cerr << "Invalid input. Valid input is of the form ccwc [-Option] [File]." << std::endl;
+         exit(1);
     }
     if (argc == 3){
         parse.option = true;
@@ -69,7 +67,12 @@ int main (int argc, char** argv){
         } else {
             parse.file = true; //at position argv[1]
         }
-    } 
+    }
+    return parse;
+}
+
+int main (int argc, char** argv){
+    Parser parse = parseInput(argc, argv);
 
     // First check whether we are using a file or standard input. 
     std::ifstream in;
@@ -117,6 +120,10 @@ int main (int argc, char** argv){
                 break;
         }
     } else {
+        if (!parse.file){
+            std::cerr << "Invalid input. Valid input is of the form ccwc [-Option] File." << std::endl;
+            exit(1);
+        }
         countAll(input, &countl, &countw, &countc);
         std::cout << countl << "  "
                   << countw << "  "
