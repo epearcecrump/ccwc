@@ -2,78 +2,131 @@
 #include <fstream>
 #include <sstream>
 
+struct Parser {
+    bool option;
+    bool file;
+};
+
+long countBytes(std::istream& in){
+    long count = 0;
+    std::string line;
+    while (std::getline(in, line)){
+       count += line.length() + 1; //add one for the newline character 
+    }
+    return count;
+}
+
+long countLines(std::istream& in){
+    long count = 0;
+    std::string line;
+    while (std::getline(in, line)){
+       count += 1; 
+    }
+    return count;
+}
+
+long countWords(std::istream& in){
+    long count = 0;
+    std::string line;
+    std::string word;
+    while (std::getline(in, line)){
+        std::stringstream words(line);
+        while (words >> word){
+            count += 1;
+        } 
+    }
+    return count;
+}
+
+void countAll(std::istream& in, long* countl, long* countw, long* countc){
+    std::string line;
+    std::string word;
+    while (std::getline(in, line)){
+        *countl += 1;
+        *countc += line.length() + 1;
+        std::stringstream words(line);
+        while (words >> word){
+            *countw += 1;
+        } 
+    }
+}
+
+
+
+
 int main (int argc, char** argv){
+    Parser parse = {false, false}; //argc = 1 case
+    if (argc > 3){
+         std::cerr << "Not valid input." << std::endl;
+    }
     if (argc == 3){
-        std::ifstream in;
-        in.open(argv[2]);
-
-        long count = 0;
-        std::string line;
-        std::string word;
-        while (std::getline(in, line)){
-            if (argv[1][1] == 'c'){
-                count += line.length() + 1; //add one for the newline character
-            } else if (argv[1][1] == 'l'){
-                count += 1;
-            } else if (argv[1][1] == 'w'){
-                std::stringstream words(line);
-                while (words >> word){
-                    count += 1;
-                } 
-            } 
+        parse.option = true;
+        parse.file = true; //at position argv[2]
+    } 
+    if (argc == 2){  
+        if (argv[1][0] == '-'){
+            parse.option = true;
+        } else {
+            parse.file = true; //at position argv[1]
         }
-        in.close();
-        std::cout << count << " " << argv[2] << std::endl;
-    }
-    else if (argc == 2){
-        std::ifstream in;
-        in.open(argv[1]);
+    } 
 
-        long countc = 0;
-        long countl = 0;
-        long countw = 0; 
-
-        std::string line;
-        std::string word;
-
-        while (std::getline(in, line)){
-                countc += line.length() + 1; //add one for the newline character
-                countl += 1;
-                std::stringstream words(line);
-                while (words >> word){
-                    countw += 1;
-                } 
+    // First check whether we are using a file or standard input. 
+    std::ifstream in;
+    std::istream& input = parse.file ? in : std::cin;
+    char* file = nullptr;
+    if (parse.file){
+        if (argc == 2){
+            file = argv[1];
+            in.open(file);
+        } else { //argc == 3
+            file = argv[2];
+            in.open(file);
         }
+    } 
 
-        in.close();
-        std::cout << countl << "  "
-                  << countw << "  "
-                  << countc << " " 
-                  << argv[1] << std::endl;
-
-    } else if (argc == 1) {
-        long countc = 0;
-        long countl = 0;
-        long countw = 0; 
-
-        std::string line;
-        std::string word;
-
-        while (std::getline(std::cin, line)){
-                countc += line.length() + 1; //add one for the newline character
-                countl += 1;
-                std::stringstream words(line);
-                while (words >> word){
-                    countw += 1;
+    long countc = 0;
+    long countl = 0;
+    long countw = 0;  
+    //2) Then check if there is an option or not.
+    if (parse.option){
+        switch(argv[1][1]){
+            case 'c': 
+                countc = countBytes(input);
+                std::cout << countc;
+                if (file){
+                    std::cout << " " << file;
                 } 
+                std::cout << std::endl;
+                break;
+            case 'l':
+                countl = countLines(input); 
+                std::cout << countl;
+                if (file){
+                    std::cout << " " << file;
+                }  
+                std::cout << std::endl;
+                break;
+            case 'w':
+                countw = countWords(input); 
+                std::cout << countw;
+                if (file){
+                    std::cout << " " << file;
+                } 
+                std::cout << std::endl;
+                break;
         }
-
-        std::cout << countl << "  "
-                  << countw << "  "
-                  << countc << std::endl; 
     } else {
-        std::cerr << "Not valid input." << std::endl;
+        countAll(input, &countl, &countw, &countc);
+        std::cout << countl << "  "
+                  << countw << "  "
+                  << countc; 
+        if (file){
+            std::cout << " " << file;
+        }  
+        std::cout << std::endl;
     }
+    in.close();
 
     return 0;
 }
