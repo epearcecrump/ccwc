@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <unistd.h>
 
 struct Parser {
     bool option;
@@ -68,7 +69,19 @@ Parser parseInput(int argc, char** argv){
             parse.file = true; //at position argv[1]
         }
     }
+    if (argc == 1){
+        if (isatty(STDIN_FILENO)){ // if true, program is receiving input from the terminal.
+            std::cerr << "Invalid input. Valid input is of the form ccwc [-Option] [File]." << std::endl;
+            exit(1);
+        }
+    }
     return parse;
+}
+
+void printFile(char* file){
+    if (file){
+        std::cout << " " << file;
+    } 
 }
 
 int main (int argc, char** argv){
@@ -97,40 +110,28 @@ int main (int argc, char** argv){
             case 'c': 
                 countc = countBytes(input);
                 std::cout << countc;
-                if (file){
-                    std::cout << " " << file;
-                } 
+                printFile(file);
                 std::cout << std::endl;
                 break;
             case 'l':
                 countl = countLines(input); 
                 std::cout << countl;
-                if (file){
-                    std::cout << " " << file;
-                }  
+                printFile(file);
                 std::cout << std::endl;
                 break;
             case 'w':
                 countw = countWords(input); 
                 std::cout << countw;
-                if (file){
-                    std::cout << " " << file;
-                } 
+                printFile(file);
                 std::cout << std::endl;
                 break;
         }
     } else {
-        if (!parse.file){
-            std::cerr << "Invalid input. Valid input is of the form ccwc [-Option] File." << std::endl;
-            exit(1);
-        }
         countAll(input, &countl, &countw, &countc);
         std::cout << countl << "  "
                   << countw << "  "
                   << countc; 
-        if (file){
-            std::cout << " " << file;
-        }  
+        printFile(file);
         std::cout << std::endl;
     }
     in.close();
